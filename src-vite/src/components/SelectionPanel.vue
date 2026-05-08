@@ -81,6 +81,7 @@
                 v-if="file.thumbnail"
                 :src="file.thumbnail"
                 class="h-full w-full object-cover"
+                :style="getSelectedThumbnailStyle(file)"
                 loading="lazy"
               />
               <div v-else class="h-full w-full skeleton"></div>
@@ -210,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, type CSSProperties } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatFileSize, formatTimestamp, isMac } from '@/common/utils';
 import {
@@ -280,6 +281,10 @@ const SELECTED_THUMBNAIL_LIMIT = 19;
 
 const visibleSelectedFiles = computed(() => props.selectedFiles.slice(0, SELECTED_THUMBNAIL_LIMIT));
 const hiddenSelectedCount = computed(() => Math.max(0, props.selectedFiles.length - SELECTED_THUMBNAIL_LIMIT));
+
+function getSelectedThumbnailStyle(file: any): CSSProperties {
+  return { rotate: `${Number(file?.rotate || 0)}deg` };
+}
 
 const multiSelectDateRange = computed(() => {
   if (props.selectedFiles.length === 0) return '';

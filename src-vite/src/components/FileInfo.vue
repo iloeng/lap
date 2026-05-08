@@ -49,7 +49,7 @@
         >
           <div v-if="showPreviewPanel" class="overflow-hidden">
             <div
-              class="relative w-full overflow-hidden rounded-box border border-base-content/5 bg-base-200/60 shadow-sm transition-[padding-top] duration-200 ease-out"
+              class="relative w-full overflow-hidden rounded-box border border-base-content/5 shadow-sm transition-[padding-top] duration-200 ease-out"
               :style="{ paddingTop: `${75 * previewScale}%` }"
             >
               <div class="absolute top-2 left-2 flex bg-base-100/30 hover:bg-base-100/70 rounded-box z-10 cursor-pointer opacity-0 pointer-events-none transition-opacity duration-150 group-hover/thumbnail:opacity-100 group-hover/thumbnail:pointer-events-auto">
@@ -78,7 +78,7 @@
                 <img
                   v-if="fileInfo?.thumbnail"
                   :src="fileInfo.thumbnail"
-                  class="h-full w-full object-contain bg-base-100/20"
+                  class="h-full w-full object-contain"
                   :style="previewImageStyle"
                 />
                 <div v-else class="flex h-full w-full items-center justify-center bg-base-content/5">

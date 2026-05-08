@@ -110,6 +110,10 @@
           <!-- grid styles cycle -->
           <TButton
             :icon="[IconCard, IconTile, IconJustified][config.settings.grid.style]"
+            :iconStyle="{ 
+              transform: `rotate(${config.settings.grid.style === 2 && config.settings.grid.justifyMode === 1 ? 90 : 0}deg)`, 
+              transition: 'transform 0.3s ease-in-out' 
+            }" 
             :tooltip="localeMsg.settings.view.style_options[config.settings.grid.style]"
             @click="cycleGridStyle"
           />
@@ -420,7 +424,7 @@
             @quick-edit-tag="clickTag"
             @quick-edit-comment="openCommentEditor"
             @navigate-folder="handleInfoNavigateFolder"
-            @refresh-file-info="updateFile(fileList[selectedItemIndex])"
+            @refresh-file-info="updateFile(fileList[selectedItemIndex], true)"
           />
         </div>
       </transition>
@@ -1382,7 +1386,7 @@ function handleItemAction(payload: { action: string, index: number }) {
       }
     },
     'reveal': () => revealPath(fileList.value[selectedItemIndex.value].file_path),
-    'refresh-file-info': () => void updateFile(fileList.value[selectedItemIndex.value]),
+    'refresh-file-info': () => void updateFile(fileList.value[selectedItemIndex.value], true),
     'favorite': toggleFavorite,
     'rotate': clickRotate,
     'info': toggleInfoPanel,
@@ -3976,7 +3980,7 @@ function removeFromFileList(index: number = 0) {
 }
 
 // update the file info from the file
-const updateFile = async (file: any) => {
+const updateFile = async (file: any, showToast = false) => {
   try {
     const updatedFile = await updateFileInfo(file.id, file.file_path);
     if (updatedFile) {
@@ -3993,9 +3997,18 @@ const updateFile = async (file: any) => {
 
       // Clear CSS filter adjustments after image reload is triggered
       uiStore.clearActiveAdjustments();
+
+      if (showToast) {
+        toast.success(localeMsg.value.tooltip.update_image.success);
+      }
+    } else if (showToast) {
+      toast.error(localeMsg.value.tooltip.update_image.failed);
     }
   } catch (err) {
     console.error('Failed to update file info:', err);
+    if (showToast) {
+      toast.error(localeMsg.value.tooltip.update_image.failed);
+    }
   }
 }
 

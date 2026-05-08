@@ -4,7 +4,7 @@
     <!-- logo -->
     <div class="px-4 flex w-full flex-row items-center justify-start gap-4">
       <div class="shrink-0">
-        <img src="@/assets/images/logo.png" class="w-24 h-24 mx-auto rounded-box drop-shadow-lg" />
+        <img src="@/assets/images/logo.png" class="w-20 h-20 rounded-2xl" />
       </div>
       <div class="flex flex-col text-left">
         <h3 class="text-xl">{{ packageInfo.name }}</h3>
