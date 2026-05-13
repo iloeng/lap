@@ -963,6 +963,34 @@ pub fn set_folder_favorite(folder_id: i64, is_favorite: bool) -> Result<usize, S
         .map_err(|e| format!("Error while setting folder favorite: {}", e))
 }
 
+/// get a folder's search exclusion status (true or false)
+#[tauri::command]
+pub fn get_folder_search_excluded(folder_path: &str) -> Result<bool, String> {
+    let is_excluded_opt = AFolder::get_is_excluded_from_search(folder_path)
+        .map_err(|e| format!("Error while getting folder search exclusion: {}", e))?;
+
+    match is_excluded_opt {
+        Some(is_excluded) => Ok(is_excluded),
+        None => Ok(false),
+    }
+}
+
+/// set a folder's search exclusion status (true or false)
+#[tauri::command]
+pub fn set_folder_search_excluded(
+    album_id: i64,
+    folder_path: &str,
+    is_excluded: bool,
+) -> Result<usize, String> {
+    let folder = AFolder::add_to_db(album_id, folder_path)
+        .map_err(|e| format!("Error while ensuring folder in DB: {}", e))?;
+    let folder_id = folder
+        .id
+        .ok_or_else(|| "Folder was saved without an id".to_string())?;
+    AFolder::update_column(folder_id, "is_excluded_from_search", &is_excluded)
+        .map_err(|e| format!("Error while setting folder search exclusion: {}", e))
+}
+
 /// set a file's favorite status (true or false)
 #[tauri::command]
 pub fn set_file_favorite(file_id: i64, is_favorite: bool) -> Result<usize, String> {

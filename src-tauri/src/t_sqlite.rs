@@ -12,10 +12,10 @@ use crate::t_libraw;
 use crate::t_storage;
 use crate::t_utils;
 use crate::t_video;
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use exif::{In, Tag, Value};
 use image::{GenericImageView, ImageFormat};
-use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Result, ToSql};
+use rusqlite::{Connection, OptionalExtension, Result, ToSql, params, params_from_iter};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -386,7 +386,8 @@ pub struct AFolder {
     pub modified_at: Option<i64>, // folder modified time
 
     // extra info
-    pub is_favorite: Option<bool>, // is favorite
+    pub is_favorite: Option<bool>,             // is favorite
+    pub is_excluded_from_search: Option<bool>, // exclude folder and children from search
 }
 
 impl AFolder {
@@ -401,6 +402,7 @@ impl AFolder {
             created_at: file_info.created,
             modified_at: file_info.modified,
             is_favorite: None,
+            is_excluded_from_search: Some(false),
         })
     }
 
@@ -414,6 +416,7 @@ impl AFolder {
             created_at: row.get(4)?,
             modified_at: row.get(5)?,
             is_favorite: row.get(6)?,
+            is_excluded_from_search: row.get(7)?,
         })
     }
 
@@ -422,7 +425,7 @@ impl AFolder {
         let conn = open_conn()?;
         let result = conn
             .query_row(
-                "SELECT id, album_id, name, path, created_at, modified_at, is_favorite
+                "SELECT id, album_id, name, path, created_at, modified_at, is_favorite, COALESCE(is_excluded_from_search, 0)
                 FROM afolders
                 WHERE path = ?1",
                 params![folder_path],
@@ -438,7 +441,7 @@ impl AFolder {
         let conn = open_conn()?;
         let result = conn
             .query_row(
-                "SELECT id, album_id, name, path, created_at, modified_at, is_favorite
+                "SELECT id, album_id, name, path, created_at, modified_at, is_favorite, COALESCE(is_excluded_from_search, 0)
                 FROM afolders
                 WHERE id = ?1",
                 params![id],
@@ -454,15 +457,16 @@ impl AFolder {
         let conn = open_conn()?;
         let result = conn
             .execute(
-                "INSERT INTO afolders (album_id, name, path, created_at, modified_at, is_favorite) 
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                "INSERT INTO afolders (album_id, name, path, created_at, modified_at, is_favorite, is_excluded_from_search) 
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                 params![
                     self.album_id,
                     self.name,
                     self.path,
                     self.created_at,
                     self.modified_at,
-                    self.is_favorite
+                    self.is_favorite,
+                    self.is_excluded_from_search
                 ],
             )
             .map_err(|e| e.to_string())?;
@@ -566,12 +570,26 @@ impl AFolder {
         Ok(result)
     }
 
+    // get a folder's is_excluded_from_search status
+    pub fn get_is_excluded_from_search(folder_path: &str) -> Result<Option<bool>, String> {
+        let conn = open_conn()?;
+        let result = conn
+            .query_row(
+                "SELECT COALESCE(is_excluded_from_search, 0) FROM afolders WHERE path = ?1",
+                params![folder_path],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| e.to_string())?;
+        Ok(result)
+    }
+
     // get all favorite folders
     pub fn get_favorite_folders() -> Result<Vec<Self>, String> {
         let conn = open_conn()?;
 
         let query =
-            "SELECT a.id, a.album_id, a.name, a.path, a.created_at, a.modified_at, a.is_favorite
+            "SELECT a.id, a.album_id, a.name, a.path, a.created_at, a.modified_at, a.is_favorite, COALESCE(a.is_excluded_from_search, 0)
             FROM afolders a
             WHERE a.is_favorite = 1
             ORDER BY a.name"
@@ -703,6 +721,24 @@ pub struct ImageSearchParams {
 }
 
 impl AFile {
+    /// Exclude files whose folder path is the excluded folder itself or one of its children.
+    /// The caller must pass the alias for the file's joined afolders row.
+    fn search_exclusion_condition(folder_alias: &str) -> String {
+        let sep = std::path::MAIN_SEPARATOR.to_string().replace('\'', "''");
+        format!(
+            "NOT EXISTS (
+                SELECT 1 FROM afolders xf
+                WHERE COALESCE(xf.is_excluded_from_search, 0) = 1
+                AND xf.album_id = {folder_alias}.album_id
+                AND (
+                    {folder_alias}.path = xf.path
+                    OR instr({folder_alias}.path, xf.path || '{}') = 1
+                )
+            )",
+            sep
+        )
+    }
+
     fn new(folder_id: i64, file_path: &str, file_type: i64) -> Result<Self, String> {
         let file_info = t_utils::FileInfo::new(file_path)?;
 
@@ -1918,6 +1954,8 @@ impl AFile {
             sql_params.push(Box::new(params.person_id));
         }
 
+        conditions.push(Self::search_exclusion_condition("b"));
+
         let joins_clause = if !joins.is_empty() {
             format!(" {}", joins.join(" "))
         } else {
@@ -2301,10 +2339,14 @@ impl AFile {
         // 2. Perform Vector Search
         let conn = open_conn()?;
 
-        let query = "SELECT a.id, a.embeds 
+        let mut query = "SELECT a.id, a.embeds 
             FROM afiles a
+            LEFT JOIN afolders b ON a.folder_id = b.id
             WHERE a.embeds IS NOT NULL"
             .to_string();
+
+        query.push_str(" AND ");
+        query.push_str(&Self::search_exclusion_condition("b"));
 
         let mut stmt = conn.prepare(&query).map_err(|e| e.to_string())?;
 
@@ -4449,6 +4491,7 @@ fn create_db_internal() -> Result<(), String> {
             created_at INTEGER,
             modified_at INTEGER,
             is_favorite INTEGER,
+            is_excluded_from_search INTEGER DEFAULT 0,
             FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
         )",
         [],
@@ -4471,6 +4514,11 @@ fn create_db_internal() -> Result<(), String> {
     .map_err(|e| e.to_string())?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_afolders_is_favorite ON afolders(is_favorite)",
+        [],
+    )
+    .map_err(|e| e.to_string())?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_afolders_is_excluded_from_search ON afolders(is_excluded_from_search)",
         [],
     )
     .map_err(|e| e.to_string())?;

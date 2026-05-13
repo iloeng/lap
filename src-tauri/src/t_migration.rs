@@ -63,6 +63,11 @@ fn get_migrations() -> Vec<Migration> {
             description: "Add last_scan_time for file and album sync",
             sql: "",
         },
+        Migration {
+            version: 5,
+            description: "Add folder search exclusion flag",
+            sql: "",
+        },
     ]
 }
 
@@ -140,6 +145,29 @@ pub fn check_and_migrate(conn: &Connection) -> Result<(), String> {
                     [],
                 )
                 .map_err(|e| format!("Migration {} failed adding last_scan_time index: {}", migration.version, e))?;
+            } else if migration.version == 5 {
+                if !table_has_column(conn, "afolders", "is_excluded_from_search")? {
+                    conn.execute(
+                        "ALTER TABLE afolders ADD COLUMN is_excluded_from_search INTEGER DEFAULT 0",
+                        [],
+                    )
+                    .map_err(|e| {
+                        format!(
+                            "Migration {} failed adding is_excluded_from_search: {}",
+                            migration.version, e
+                        )
+                    })?;
+                }
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_afolders_is_excluded_from_search ON afolders(is_excluded_from_search)",
+                    [],
+                )
+                .map_err(|e| {
+                    format!(
+                        "Migration {} failed adding is_excluded_from_search index: {}",
+                        migration.version, e
+                    )
+                })?;
             } else if !migration.sql.trim().is_empty() {
                 conn.execute_batch(migration.sql)
                     .map_err(|e| format!("Migration {} failed: {}", migration.version, e))?;

@@ -241,6 +241,7 @@ export async function getAllAlbums() {
        for (let i = 0; i < albums.length; i++) {
         const album = albums[i];
         album.is_favorite = await getFolderFavorite(album.path);
+        album.is_excluded_from_search = await getFolderSearchExcluded(album.path);
       }
 
       return albums;
@@ -414,6 +415,7 @@ export async function fetchFolder(path, isRecursive, sort = 0) {
       for (let i = 0; i < folder.children.length; i++) {
         const child = folder.children[i];
         child.is_favorite = await getFolderFavorite(child.path);
+        child.is_excluded_from_search = await getFolderSearchExcluded(child.path);
       }
       console.log('fetchFolder:', folder);
       return folder;
@@ -964,6 +966,32 @@ export async function setFolderFavorite(folderId, isFavorite) {
     };
   } catch (error) {
     console.log('Failed to set folder favorite:', error);
+  }
+  return null;
+}
+
+// get folder search exclusion
+export async function getFolderSearchExcluded(folderPath) {
+  try {
+    const isExcluded = await invoke('get_folder_search_excluded', { folderPath });
+    if(isExcluded) {
+      return isExcluded;
+    };
+  } catch (error) {
+    console.log('Failed to get folder search exclusion:', error);
+  }
+  return false;
+}
+
+// set folder search exclusion
+export async function setFolderSearchExcluded(albumId, folderPath, isExcluded) {
+  try {
+    const result = await invoke('set_folder_search_excluded', { albumId, folderPath, isExcluded });
+    if(result) {
+      return result;
+    };
+  } catch (error) {
+    console.log('Failed to set folder search exclusion:', error);
   }
   return null;
 }

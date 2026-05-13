@@ -29,7 +29,7 @@
           ]"
           @click.stop="expandFolder(child)"
         />
-        <component :is="child.is_favorite ? IconFolderFavorite : IconFolder" class="p-1 w-6 h-6 shrink-0"/>
+        <IconFolder class="p-1 w-6 h-6 shrink-0"/>
 
         <!-- name -->
         <input v-if="isRenamingFolder && selection.folderPath.value === child.path"
@@ -49,11 +49,16 @@
             {{ child.name }}
           </div>
           <div class="ml-auto flex flex-row items-center text-base-content/30">
-            <!-- <TButton v-if="child.is_favorite" 
-              :icon="IconHeartFilled"
+            <TButton v-if="child.is_favorite" 
+              :icon="IconHeart"
               :disabled="true"
               :buttonSize="'small'"
-            /> -->
+            />
+            <TButton v-if="child.is_excluded_from_search" 
+              :icon="IconHide"
+              :disabled="true"
+              :buttonSize="'small'"
+            />
             <ContextMenu v-if="allowContextMenu && !isRenamingFolder"
               :class="[
                 selection.folderPath.value != child.path ? 'invisible group-hover:visible' : ''
@@ -133,7 +138,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { config, libConfig } from '@/common/config';
 import { isMac, shortenFilename, isValidFileName } from '@/common/utils';
 import { createFolder, renameFolder, fetchFolder, moveFolder, copyFolder, revealPath, deleteFolder } from '@/common/api';
-import { setFolderFavorite } from '@/common/api';
+import { setFolderFavorite, setFolderSearchExcluded } from '@/common/api';
 import { Album, Folder } from '@/common/types';
 import { useAlbumSelection } from '@/composables/useAlbumSelection';
 
@@ -152,9 +157,9 @@ import {
   IconMoveTo,
   IconTrash,
   IconHeart,
-  IconFolderFavorite,
-  IconHeartFilled,
   IconFolder,
+  IconHide,
+  IconUnhide,
   IconRefresh,
   IconStar,
   IconUnFavorite
@@ -224,6 +229,14 @@ const getMenuItemsForFolder = (folder: any) => {
       disabled: isRoot,
       action: () => {
         toggleFavorite();
+      }
+    },
+    {
+      label: folder?.is_excluded_from_search ? localeMsg.value.menu.album.include_in_search : localeMsg.value.menu.album.exclude_from_search,
+      icon: folder?.is_excluded_from_search ? IconUnhide : IconHide,
+      disabled: isRoot,
+      action: () => {
+        toggleFolderSearchExcluded(folder);
       }
     },
     {
@@ -622,6 +635,20 @@ const toggleFavorite = async () => {
   }
   folder.is_favorite = !folder.is_favorite;
   await setFolderFavorite(selection.folderId.value, folder.is_favorite ?? false);
+};
+
+/// toggle whether folder and children are excluded from search
+const toggleFolderSearchExcluded = async (folder: Folder) => {
+  if (!folder?.path || !props.albumId) {
+    return;
+  }
+
+  const nextValue = !folder.is_excluded_from_search;
+  const result = await setFolderSearchExcluded(props.albumId, folder.path, nextValue);
+  if (result !== null) {
+    folder.is_excluded_from_search = nextValue;
+    tauriEmit('refresh-content');
+  }
 };
 
 </script>

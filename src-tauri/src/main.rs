@@ -275,6 +275,8 @@ async fn main() {
             t_cmds::get_favorite_folders,
             t_cmds::get_folder_favorite,
             t_cmds::set_folder_favorite,
+            t_cmds::get_folder_search_excluded,
+            t_cmds::set_folder_search_excluded,
             t_cmds::set_file_favorite,
             t_cmds::set_file_rating,
             // tag

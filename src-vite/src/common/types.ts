@@ -11,6 +11,7 @@ export interface Folder {
     modified_at?: number;
     is_expanded?: boolean;
     is_favorite?: boolean;
+    is_excluded_from_search?: boolean;
     children?: Folder[];
 }
 
