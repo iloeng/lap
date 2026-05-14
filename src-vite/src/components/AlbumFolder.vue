@@ -138,7 +138,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { config, libConfig } from '@/common/config';
 import { isMac, shortenFilename, isValidFileName } from '@/common/utils';
 import { createFolder, renameFolder, fetchFolder, moveFolder, copyFolder, revealPath, deleteFolder } from '@/common/api';
-import { setFolderFavorite, setFolderSearchExcluded } from '@/common/api';
+import { recountAlbum, setFolderFavorite, setFolderSearchExcluded } from '@/common/api';
 import { Album, Folder } from '@/common/types';
 import { useAlbumSelection } from '@/composables/useAlbumSelection';
 
@@ -647,7 +647,11 @@ const toggleFolderSearchExcluded = async (folder: Folder) => {
   const result = await setFolderSearchExcluded(props.albumId, folder.path, nextValue);
   if (result !== null) {
     folder.is_excluded_from_search = nextValue;
-    tauriEmit('refresh-content');
+    const album = await recountAlbum(props.albumId);
+    if (album) {
+      tauriEmit('albums-refreshed', { albums: [album] });
+    }
+    tauriEmit('library-total-refreshed');
   }
 };
 

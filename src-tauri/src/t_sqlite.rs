@@ -350,7 +350,11 @@ impl Album {
         let conn = open_conn()?;
         let total: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM afiles a JOIN afolders b ON a.folder_id = b.id WHERE b.album_id = ?1",
+                &format!(
+                    "SELECT COUNT(*) FROM afiles a JOIN afolders b ON a.folder_id = b.id
+                    WHERE b.album_id = ?1 AND {}",
+                    AFile::search_exclusion_condition("b")
+                ),
                 params![id],
                 |row| row.get(0),
             )
@@ -1855,7 +1859,11 @@ impl AFile {
 
     // get total count and size of files
     pub fn get_total_count_and_sum() -> Result<(i64, i64), String> {
-        let sql = Self::build_count_query().to_string();
+        let sql = format!(
+            "{} WHERE {}",
+            Self::build_count_query(),
+            Self::search_exclusion_condition("b")
+        );
         Self::query_count_and_sum(&sql, &[])
     }
 
