@@ -322,7 +322,17 @@ jobs:
     if: |
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux')) ||
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
 
     steps:
       - name: Checkout repository
@@ -355,14 +365,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: linux-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: linux-${{ matrix.arch }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            linux-pnpm-store-
+            linux-${{ matrix.arch }}-pnpm-store-
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-unknown-linux-gnu
+          targets: ${{ matrix.target }}
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -373,13 +383,13 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             src-tauri/target/
-          key: linux-x86_64-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: linux-${{ matrix.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            linux-x86_64-cargo-
+            linux-${{ matrix.arch }}-cargo-
 
       - name: Download FFmpeg Sidecars
         shell: bash
-        run: bash scripts/download_ffmpeg_sidecar.sh linux x86_64
+        run: bash scripts/download_ffmpeg_sidecar.sh linux ${{ matrix.arch }}
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -391,7 +401,7 @@ jobs:
 
       - name: Clear cached Linux bundle artifacts
         shell: bash
-        run: rm -rf src-tauri/target/x86_64-unknown-linux-gnu/release/bundle
+        run: rm -rf src-tauri/target/${{ matrix.target }}/release/bundle
 
       - name: Build and Sign
         uses: tauri-apps/tauri-action@v0.5
@@ -402,14 +412,14 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: .
-          args: --verbose --target x86_64-unknown-linux-gnu --bundles deb,appimage --config '{"bundle":{"createUpdaterArtifacts":false}}'
+          args: --verbose --target ${{ matrix.target }} --bundles deb,appimage --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       - name: Rename Linux package for PR build
         shell: bash
         run: |
           set -euo pipefail
           SUFFIX="pr-${{ github.event.pull_request.number || github.run_number }}"
-          find src-tauri/target/x86_64-unknown-linux-gnu/release/bundle -type f \( -name "*.deb" -o -name "*.AppImage" \) | while read file; do
+          find src-tauri/target/${{ matrix.target }}/release/bundle -type f \( -name "*.deb" -o -name "*.AppImage" \) | while read file; do
             dir=$(dirname "$file")
             base=$(basename "$file")
             ext="${file##*.}"
@@ -420,10 +430,10 @@ jobs:
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: lap-pr-linux-x86_64-${{ github.event.pull_request.number || github.run_number }}
+          name: lap-pr-linux-${{ matrix.arch }}-${{ github.event.pull_request.number || github.run_number }}
           path: |
-            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
-            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+            src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
           if-no-files-found: error
 
   publish-pr-build:
