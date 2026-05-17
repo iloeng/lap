@@ -46,8 +46,10 @@ fn build_libheif() {
     let binary_dir = build_root.join("build");
     fs::create_dir_all(&binary_dir).unwrap();
 
-    let is_windows = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows";
-    let libde265 = match build_libde265(&manifest_dir, &out_dir, is_windows) {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    let is_windows = target_os == "windows";
+    let use_cmake_default_generator = is_windows;
+    let libde265 = match build_libde265(&manifest_dir, &out_dir, use_cmake_default_generator) {
         Some(build) => build,
         None => {
             println!(
@@ -161,9 +163,11 @@ fn build_libheif() {
     println!("cargo:rustc-link-lib=static={}", lib_name);
     println!("cargo:rustc-link-search=native={}", libde265.lib_dir.display());
     println!("cargo:rustc-link-lib=static={}", libde265.lib_name);
-    if !is_windows {
-        // Some libheif builds depend on stdc++.
-        println!("cargo:rustc-link-lib=stdc++");
+    match target_os.as_str() {
+        "macos" => println!("cargo:rustc-link-lib=c++"),
+        "windows" => {}
+        // Some libheif builds depend on the C++ runtime.
+        _ => println!("cargo:rustc-link-lib=stdc++"),
     }
 
     // Enable the Rust-side libheif bindings only when the native library is available.
@@ -178,6 +182,8 @@ fn write_build_info() {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards");
+    // This intentionally records the real build time for About/version
+    // metadata, so Cargo will rewrite build_info.rs on each build.
     let timestamp = now.as_secs();
 
     let mut formatted = String::new();
@@ -192,8 +198,10 @@ fn write_build_info() {
 }
 
 fn build_libraw() {
-    let is_windows = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows";
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    let is_windows = target_os == "windows";
+    const LIBRAW_LINK_NAME: &str = "raw";
+    const SHIM_LINK_NAME: &str = "lap_libraw_shim";
 
     println!("cargo:rerun-if-changed=src/libraw_shim.cpp");
     println!("cargo:rerun-if-changed=src/jpeg_shim.cpp");
@@ -247,19 +255,7 @@ fn build_libraw() {
         build.file(source_file);
     }
 
-    build.compile("raw");
-
-    if is_windows {
-        println!("cargo:rustc-link-lib=ws2_32");
-    } else {
-        println!("cargo:rustc-link-lib=z");
-        println!("cargo:rustc-link-lib=m");
-        match target_os.as_str() {
-            "macos" => println!("cargo:rustc-link-lib=c++"),
-            "linux" => println!("cargo:rustc-link-lib=stdc++"),
-            _ => {}
-        }
-    }
+    build.compile(LIBRAW_LINK_NAME);
 
     // Build the shim (must compile before emitting -ljpeg so the linker
     // processes libjpeg after liblap_libraw_shim, which references jpeg).
@@ -286,13 +282,41 @@ fn build_libraw() {
         shim.flag_if_supported("-std=c++17");
     }
 
-    shim.compile("lap_libraw_shim");
+    shim.compile(SHIM_LINK_NAME);
 
-    // Link jpeg after the shim so that liblap_libraw_shim's jpeg
-    // references resolve against the vendored static libjpeg.
+    // Emit jpeg search path early (even if Cargo deduplicates, the search
+    // path is needed for the linker to find libjpeg.a later via -l flag).
     if let Some(jpeg) = &jpeg_build {
         println!("cargo:rustc-link-search=native={}", jpeg.lib_dir.display());
+    }
+
+    // On Linux with static linking, libraw, libjpeg, and the shim are
+    // interdependent. Use --start-group / --end-group via raw linker args to
+    // let the linker resolve symbols across the archives iteratively, and to
+    // bypass Cargo's deduplication of rustc-link-lib directives.
+    if target_os == "linux" {
+        println!("cargo:rustc-link-arg=-Wl,--start-group");
+        println!("cargo:rustc-link-arg=-l{}", LIBRAW_LINK_NAME);
+        if let Some(jpeg) = &jpeg_build {
+            println!("cargo:rustc-link-arg=-l{}", jpeg.lib_name);
+        }
+        println!("cargo:rustc-link-arg=-l{}", SHIM_LINK_NAME);
+        println!("cargo:rustc-link-arg=-Wl,--end-group");
+    } else if let Some(jpeg) = &jpeg_build {
+        // Non-Linux: just link jpeg normally (cc already emitted -lraw & -llap_libraw_shim).
         println!("cargo:rustc-link-lib=static={}", jpeg.lib_name);
+    }
+
+    if is_windows {
+        println!("cargo:rustc-link-lib=ws2_32");
+    } else {
+        println!("cargo:rustc-link-lib=z");
+        println!("cargo:rustc-link-lib=m");
+        match target_os.as_str() {
+            "macos" => println!("cargo:rustc-link-lib=c++"),
+            "linux" => println!("cargo:rustc-link-lib=stdc++"),
+            _ => {}
+        }
     }
 
     // macOS pasteboard shim for drag-drop URL extraction
@@ -383,7 +407,11 @@ fn build_libjpeg(manifest_dir: &Path, out_dir: &Path, is_windows: bool) -> Optio
     })
 }
 
-fn build_libde265(manifest_dir: &Path, out_dir: &Path, is_windows: bool) -> Option<LibDe265Build> {
+fn build_libde265(
+    manifest_dir: &Path,
+    out_dir: &Path,
+    use_cmake_default_generator: bool,
+) -> Option<LibDe265Build> {
     let source_dir = manifest_dir.join("third_party/libde265");
     if !source_dir.exists() {
         println!(
@@ -396,18 +424,6 @@ fn build_libde265(manifest_dir: &Path, out_dir: &Path, is_windows: bool) -> Opti
     let build_root = out_dir.join("libde265-build");
     let binary_dir = build_root.join("build");
     fs::create_dir_all(&binary_dir).unwrap();
-
-    let release_candidates: [PathBuf; 9] = [
-        binary_dir.join("libde265.a"),
-        binary_dir.join("Release").join("libde265.a"),
-        binary_dir.join("libde265").join("libde265.a"),
-        binary_dir.join("de265.lib"),
-        binary_dir.join("Release").join("de265.lib"),
-        binary_dir.join("libde265.lib"),
-        binary_dir.join("Release").join("libde265.lib"),
-        binary_dir.join("libde265").join("Release").join("de265.lib"),
-        binary_dir.join("libde265").join("Release").join("libde265.lib"),
-    ];
 
     let candidates: [(&str, PathBuf); 13] = [
         ("de265", binary_dir.join("libde265.a")),
@@ -425,10 +441,12 @@ fn build_libde265(manifest_dir: &Path, out_dir: &Path, is_windows: bool) -> Opti
         ("libde265", binary_dir.join("libde265").join("Debug").join("libde265.lib")),
     ];
 
-    let have_existing = release_candidates.iter().any(|path| path.exists());
+    let have_existing = candidates.iter().any(|(_, path)| path.exists());
     if !have_existing {
         let mut configure = Command::new("cmake");
-        if !is_windows {
+        // Windows keeps CMake's default generator; other targets use Makefiles
+        // to match the GitHub Actions build environment.
+        if !use_cmake_default_generator {
             configure.arg("-G").arg("Unix Makefiles");
         }
         configure
@@ -480,11 +498,20 @@ fn build_libde265(manifest_dir: &Path, out_dir: &Path, is_windows: bool) -> Opti
         include_libde265_dir.join("de265.h"),
     )
     .unwrap();
-    fs::copy(
+    let version_header_candidates = [
         binary_dir.join("libde265").join("de265-version.h"),
-        include_libde265_dir.join("de265-version.h"),
-    )
-    .unwrap();
+        binary_dir.join("de265-version.h"),
+        binary_dir.join("Release").join("de265-version.h"),
+        binary_dir.join("Debug").join("de265-version.h"),
+    ];
+    let Some(version_header) = version_header_candidates.iter().find(|path| path.exists()) else {
+        println!(
+            "cargo:warning=libde265 build completed but generated de265-version.h was not found under {}",
+            binary_dir.display()
+        );
+        return None;
+    };
+    fs::copy(version_header, include_libde265_dir.join("de265-version.h")).unwrap();
     let lib_dir = lib_path.parent().unwrap_or(&binary_dir).to_path_buf();
 
     Some(LibDe265Build {
@@ -511,6 +538,7 @@ fn collect_cpp_sources(dir: &Path) -> Vec<PathBuf> {
             }
         }
     }
+    sources.sort();
     sources
 }
 
@@ -554,8 +582,8 @@ fn log_library_search_failure(binary_dir: &Path, library_name: &str) {
 fn run_command(command: &mut Command, description: &str) {
     let status = command
         .status()
-        .unwrap_or_else(|e| panic!("Failed to {}: {}", description, e));
+        .unwrap_or_else(|e| panic!("Failed to {description}: {e}"));
     if !status.success() {
-        panic!("Failed to {}: exit status {}", description, status);
+        panic!("Failed to {description}: exit status {status}");
     }
 }
