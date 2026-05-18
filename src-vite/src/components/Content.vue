@@ -382,6 +382,7 @@
           :style="{ width: activeRightPanelWidth + 'px' }">
           <DedupPane
             v-if="isDedupPanelOpen"
+            :key="dedupScanKey"
             :file-list="fileList"
             :selected-file-id="fileList[selectedItemIndex]?.id"
             :dedup-scan-key="dedupScanKey"

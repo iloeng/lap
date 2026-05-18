@@ -34,14 +34,14 @@
     >
       <div
         v-if="isDateHeader(item)"
-        class="w-full h-full flex items-end gap-2 px-2 pb-2 text-xs font-medium text-base-content/60 select-none"
+        class="w-full h-full flex items-end gap-2 p-2 text-sm font-medium text-base-content/70 select-none group"
         :class="{ 'cursor-pointer hover:text-base-content': selectMode }"
         @click="selectMode && toggleDateGroupSelection(item)"
       >
         <input
           v-if="selectMode"
           type="checkbox"
-          class="checkbox checkbox-xs checkbox-primary"
+          class="checkbox checkbox-sm border-base-content/30 group-hover:border-base-content/70"
           :checked="getDateGroupSelectionState(item).allSelected"
           :indeterminate.prop="getDateGroupSelectionState(item).partialSelected"
           @click.stop

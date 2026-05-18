@@ -194,7 +194,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { formatFileSize, getFolderName, getFolderPath, formatFolderBreadcrumb, getThumbnailDataUrl, isMac, formatTimestamp } from '@/common/utils';
 import TButton from '@/components/TButton.vue';
 import { IconCheckAll, IconCheckNone, IconClose, IconLock, IconSimilar, IconSplitOn, IconTrash, IconRefresh } from '@/common/icons';
@@ -476,8 +476,12 @@ function stopDedupStatusPolling() {
 
 async function handleDedupScanSettled() {
   stopDedupStatusPolling();
-  isDedupLoading.value = false;
   await fetchGroups();
+  // Only clear the loading flag after results are ready, so the
+  // template never shows "no duplicates" before the scan finishes.
+  if (!queuedScanKey.value || queuedScanKey.value === dedupPaneGlobalState.lastScanKey) {
+    isDedupLoading.value = false;
+  }
   if (queuedScanKey.value && queuedScanKey.value !== dedupPaneGlobalState.lastScanKey) {
     queuedScanKey.value = '';
     await triggerBackendDedup(true);
@@ -537,8 +541,8 @@ async function triggerBackendDedup(force = false) {
       return;
     }
 
-    await dedupStartScan(props.dedupQueryParams || null);
     dedupPaneGlobalState.lastScanKey = props.dedupScanKey;
+    await dedupStartScan(props.dedupQueryParams || null);
 
     const latest = await dedupGetScanStatus();
     totalGroupCount.value = Math.max(Number(latest?.groups || 0), rawGroups.value.length);
@@ -556,7 +560,7 @@ async function triggerBackendDedup(force = false) {
 
 watch(
   () => props.dedupScanKey,
-  async (newKey, oldKey) => {
+  (newKey) => {
     if (!newKey) {
       stopDedupStatusPolling();
       isDedupLoading.value = false;
@@ -565,17 +569,8 @@ watch(
       totalGroupCount.value = 0;
       totalDuplicateFileCount.value = 0;
       totalReclaimableBytes.value = 0;
-      return;
     }
-    isDedupLoading.value = true;
-    if (newKey !== oldKey) {
-      await triggerBackendDedup();
-      return;
-    }
-    await fetchGroups();
-    isDedupLoading.value = false;
-  },
-  { immediate: true }
+  }
 );
 
 watch(selectedGroupId, (groupId, prevGroupId) => {
@@ -588,31 +583,24 @@ watch(selectedGroupId, (groupId, prevGroupId) => {
 });
 
 onMounted(async () => {
-  if (props.dedupScanKey) {
-    isDedupLoading.value = true;
-  }
-  const status = await dedupGetScanStatus();
-  await refreshOverview();
-  if (status?.state === 'running') {
-    isDedupLoading.value = true;
-    ensureDedupStatusPolling();
-  } else if (props.dedupScanKey) {
-    await fetchGroups();
-  }
+  if (!props.dedupScanKey) return;
+
+  isDedupLoading.value = true;
+  await nextTick();
 
   unlistenDedupProgress.value = await listenDedupScanProgress(async (event: any) => {
     const state = event?.payload?.state;
     totalGroupCount.value = Math.max(Number(event?.payload?.groups || 0), totalGroupCount.value);
     if (state === 'running') {
-      isDedupLoading.value = true;
       ensureDedupStatusPolling();
       return;
     }
-
     if (state === 'finished' || state === 'idle' || state === 'error') {
       await handleDedupScanSettled();
     }
   });
+
+  triggerBackendDedup();
 });
 
 onUnmounted(() => {
