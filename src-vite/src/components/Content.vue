@@ -192,6 +192,7 @@
                 :timeline-data="timelineData"
                 :sort-type="currentQueryParams.sortType"
                 :showFolderFiles="showFolderFiles"
+                :folderExcluded="isCurrentFolderExcluded"
                 :selectMode="selectMode"
                 :content-ready="contentReady"
                 :layout-version="layoutVersion"
@@ -606,7 +607,7 @@ import { getAlbum, recountAlbum, getQueryCountAndSum, getQueryTimeLine, getQuery
          revealPath, getTagName, indexAlbum, listenIndexProgress, listenIndexFinished, setAlbumCover,
          updateFileInfo, importFile, importFromDrag, importUrl, importFileBytes, addFileToDb, cancelIndexing as cancelIndexingApi, selectFolder, getFacesForFile, listenFaceIndexProgress,
          openFileWithApp, getAppConfig, getIndexRecoveryInfo, clearIndexRecoveryInfo, setLastSelectedItemIndex,
-         dedupGetGroup, dedupDeleteSelected, getQueryFilePosition } from '@/common/api'; 
+         dedupGetGroup, dedupDeleteSelected, getQueryFilePosition, getFolderSearchExcluded } from '@/common/api'; 
 import { config, libConfig } from '@/common/config';
 import { getShortcutLabel, matchesShortcut, ShortcutActionId, ShortcutPlatform } from '@/common/shortcuts';
 import { getSmartTagById, SMART_TAG_SEARCH_THRESHOLD } from '@/common/smartTags';
@@ -782,7 +783,9 @@ function handleBreadcrumbClick(segmentIndex: number) {
 }
 
 // album's folder mode
-const showFolderFiles = computed(() => 
+const isCurrentFolderExcluded = ref(false);
+
+const showFolderFiles = computed(() =>
   Boolean(config.main.sidebarIndex === 0 && libConfig.album.id && libConfig.album.id > 0 && !libConfig.album.selected)
 );
 
@@ -1273,6 +1276,8 @@ let unlistenKeydown: () => void;
 let unlistenImageViewer: () => void;
 let unlistenDragDrop: () => void;
 let unlistenFaceIndexProgress: (() => void) | null = null;
+let unlistenLibraryTotalRefreshed: (() => void) | null = null;
+let isEmittingTotalRefreshed = false;
 
 let resizeObserver: ResizeObserver | null = null;
 
@@ -1303,6 +1308,7 @@ onBeforeUnmount(() => {
   }
   if (unlistenKeydown) unlistenKeydown();
   if (unlistenImageViewer) unlistenImageViewer();
+  if (unlistenLibraryTotalRefreshed) unlistenLibraryTotalRefreshed();
 });
 
 // New event handlers for GridView
@@ -2382,6 +2388,11 @@ onMounted( async() => {
   window.addEventListener('keydown', handleLocalKeyDown);
   unlistenKeydown = await listen('global-keydown', handleKeyDown);
 
+  unlistenLibraryTotalRefreshed = await listen('library-total-refreshed', () => {
+    if (isEmittingTotalRefreshed) return;
+    if (config.main.sidebarIndex === 0) updateContent(true);
+  });
+
   // Drag-drop file import — platform-aware
   // macOS / Linux: Tauri native handles everything (unchanged).
   // Windows (dragDropEnabled=false): DOM handles everything; Tauri native
@@ -3303,6 +3314,7 @@ async function updateContent(force = false) {
   const requestId = ++currentContentRequestId;
 
   contentReady.value = false;
+  isCurrentFolderExcluded.value = false;
 
   // Reset file list immediately to reflect UI change
   fileList.value = [];
@@ -3325,6 +3337,9 @@ async function updateContent(force = false) {
           } else {                        
             // folder is selected, show files in the folder
             const folderPath = libConfig.album.folderPath || "";
+            getFolderSearchExcluded(folderPath).then(excluded => {
+              if (requestId === currentContentRequestId) isCurrentFolderExcluded.value = !!excluded;
+            });
             contentTitle.value = formatFolderBreadcrumb(folderPath, album.path);
             const folderId = Number(libConfig.album.folderId || 0);
             if (folderId > 0 && folderPath) {
@@ -3894,7 +3909,9 @@ const refreshAffectedAlbums = async (albumIds: Array<number | null | undefined>)
 };
 
 const refreshLibraryTotalCount = async () => {
+  isEmittingTotalRefreshed = true;
   await tauriEmit('library-total-refreshed');
+  isEmittingTotalRefreshed = false;
 };
 
 const onMoveTo = async () => {

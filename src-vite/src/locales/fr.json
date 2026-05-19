@@ -294,6 +294,8 @@
       "folders": "Aucun dossier trouvé",
       "favorite_folders": "Aucun dossier favori trouvé",
       "favorite_folders_hint": "Mettez un dossier en favori dans Albums pour voir ici ses fichiers et sous-dossiers",
+      "folder_excluded": "Ce dossier est exclu de la recherche",
+      "folder_excluded_hint": "Incluez ce dossier via le menu contextuel pour voir ses fichiers ici.",
       "tag": "Aucun tag trouvé",
       "tag_hint": "Ajoutez des tags à vos fichiers pour les voir ici",
       "calendar": "Aucun élément de calendrier trouvé",

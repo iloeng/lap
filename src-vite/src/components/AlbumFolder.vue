@@ -24,7 +24,7 @@
         <IconRight
           :class="[
             'p-1 w-6 h-6 shrink-0 transition-transform',
-            (!child.children || child.children.length > 0) ? '' : 'opacity-0 pointer-events-none',
+            (!child.children || child.children.length > 0) && !child.is_excluded_from_search ? '' : 'opacity-0 pointer-events-none',
             child.is_expanded ? 'rotate-90' : ''
           ]"
           @click.stop="expandFolder(child)"
@@ -70,7 +70,7 @@
           </div>
         </template>
       </div>
-      <AlbumFolder v-if="child.is_expanded && child.id != 0" 
+      <AlbumFolder v-if="child.is_expanded && child.id != 0 && !child.is_excluded_from_search"
         :key="child.id"
         :children="child.children" 
         :albumId="albumId"
@@ -317,6 +317,7 @@ const clickFolder = async (albumIdVal: number, folder: Folder) => {
 
 /// click expand icon to toggle folder expansion
 const expandFolder = async (folder: any, forceRefresh = false) => {
+  if (folder.is_excluded_from_search) return;
   folder.is_expanded = forceRefresh ? true : !folder.is_expanded;
 
   if (folder.is_expanded && (!folder.children || forceRefresh)) {

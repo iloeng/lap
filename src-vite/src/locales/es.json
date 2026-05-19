@@ -294,6 +294,8 @@
       "folders": "No se encontraron carpetas",
       "favorite_folders": "No se encontraron carpetas favoritas",
       "favorite_folders_hint": "Marca una carpeta como favorita en Álbumes para ver aquí sus archivos y subcarpetas",
+      "folder_excluded": "Esta carpeta está excluida de la búsqueda",
+      "folder_excluded_hint": "Incluye esta carpeta a través del menú contextual para ver sus archivos aquí.",
       "tag": "No se encontraron etiquetas",
       "tag_hint": "Añade etiquetas a tus archivos para verlas aquí",
       "calendar": "No se encontraron elementos del calendario",

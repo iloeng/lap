@@ -294,6 +294,8 @@
       "folders": "Keine Ordner gefunden",
       "favorite_folders": "Keine Favoritenordner gefunden",
       "favorite_folders_hint": "Favorisieren Sie einen Ordner in Alben, um hier seine Dateien und Unterordner zu sehen",
+      "folder_excluded": "Dieser Ordner ist von der Suche ausgeschlossen",
+      "folder_excluded_hint": "Schließen Sie diesen Ordner über das Kontextmenü in die Suche ein, um seine Dateien hier zu sehen.",
       "tag": "Keine Tags gefunden",
       "tag_hint": "Fügen Sie Ihren Dateien Tags hinzu, damit sie hier angezeigt werden",
       "calendar": "Keine Kalendereinträge gefunden",

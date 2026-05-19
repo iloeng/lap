@@ -294,6 +294,8 @@
       "folders": "Nenhuma pasta encontrada",
       "favorite_folders": "Nenhuma pasta favorita encontrada",
       "favorite_folders_hint": "Favorite uma pasta em Álbuns para ver aqui seus arquivos e subpastas",
+      "folder_excluded": "Esta pasta está excluída da pesquisa",
+      "folder_excluded_hint": "Inclua esta pasta através do menu de contexto para ver seus arquivos aqui.",
       "tag": "Nenhuma etiqueta encontrada",
       "tag_hint": "Adicione etiquetas aos seus arquivos para vê-las aqui",
       "calendar": "Nenhum item de calendário encontrado",

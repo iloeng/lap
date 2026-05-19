@@ -294,6 +294,8 @@
       "folders": "No folders found",
       "favorite_folders": "No favorite folders found",
       "favorite_folders_hint": "Favorite a folder in Albums to see its files, including subfolders",
+      "folder_excluded": "This folder is excluded from search",
+      "folder_excluded_hint": "Include this folder via the context menu to see its files here.",
       "tag": "No tags found",
       "tag_hint": "Add tags to your files to see them here",
       "calendar": "No calendar items found",
