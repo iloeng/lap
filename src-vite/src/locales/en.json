@@ -378,6 +378,7 @@
       "rename": "Rename",
       "move_to": "Move to...",
       "copy_to": "Copy to...",
+      "export_to": "Export to...",
       "move_to_trash": "Move to trash",
       "delete": "Delete",
       "reveal_in_finder": "Reveal in Finder...",
@@ -525,6 +526,11 @@
       "ok": "Copy",
       "success": "Copied '{source}' to '{dest}'.",
       "error": "Failed to copy '{source}' to '{dest}'."
+    },
+    "export_to": {
+      "title": "Export to folder",
+      "success": "Exported '{source}' to '{dest}'.",
+      "error": "Failed to export '{source}' to '{dest}'."
     },
     "rename_file": {
       "title": "Rename file",

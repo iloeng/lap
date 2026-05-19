@@ -410,6 +410,7 @@
             @select-invert="invertSelectionInCurrentList"
             @move-to="showMoveTo = true"
             @copy-to="showCopyTo = true"
+            @export-to="onExportTo"
             @trash="openTrashMsgbox()"
             @favorite-all="selectModeSetFavorites(true)"
             @unfavorite-all="selectModeSetFavorites(false)"
@@ -595,6 +596,7 @@
 
 import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { emit as tauriEmit, listen } from '@tauri-apps/api/event';
+import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { platform } from '@tauri-apps/plugin-os';
@@ -1504,6 +1506,7 @@ function handleItemAction(payload: { action: string, index: number }) {
     'rename': clickRename,
     'move-to': () => showMoveTo.value = true,
     'copy-to': () => showCopyTo.value = true,
+    'export-to': () => void onExportTo(),
     'trash': () => openTrashMsgbox(),
     'album-folder': () => {
       const selectedFile = fileList.value[selectedItemIndex.value];
@@ -4021,6 +4024,39 @@ const onCopyTo = async () => {
   }
 
   showCopyTo.value = false;
+}
+
+const onExportTo = async () => {
+  const destination = await openDialog({
+    title: t('msgbox.export_to.title'),
+    multiple: false,
+    directory: true,
+  });
+  if (!destination || Array.isArray(destination)) return;
+
+  const files = selectMode.value && selectedCount.value > 0
+    ? getActionableSelectedItems()
+    : (selectedItemIndex.value >= 0 ? [fileList.value[selectedItemIndex.value]] : []);
+  if (files.length === 0) return;
+
+  const destPath = String(destination);
+  const destLabel = getFolderName(destPath) || destPath;
+  const sourceLabel = selectMode.value
+    ? t('toolbar.filter.select_count', { count: files.length.toLocaleString() })
+    : (files[0]?.name || '');
+  let successCount = 0;
+
+  for (const file of files) {
+    if (!file?.file_path) continue;
+    const copiedFile = await copyFile(file.file_path, destPath);
+    if (copiedFile) successCount += 1;
+  }
+
+  if (successCount > 0) {
+    toast.success(t('msgbox.export_to.success', { source: sourceLabel, dest: destLabel }));
+  } else {
+    toast.error(t('msgbox.export_to.error', { source: sourceLabel, dest: destLabel }));
+  }
 }
 
 async function handleDropFiles(paths: string[]) {

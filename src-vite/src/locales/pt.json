@@ -378,6 +378,7 @@
       "rename": "Renomear",
       "move_to": "Mover para...",
       "copy_to": "Copiar para...",
+      "export_to": "Exportar para...",
       "move_to_trash": "Mover para lixeira",
       "delete": "Excluir",
       "reveal_in_finder": "Mostrar no Finder...",
@@ -518,6 +519,11 @@
       "ok": "Copiar",
       "success": "'{source}' foi copiado para '{dest}'.",
       "error": "Falha ao copiar '{source}' para '{dest}'."
+    },
+    "export_to": {
+      "title": "Exportar para pasta",
+      "success": "'{source}' exportado para '{dest}'.",
+      "error": "Falha ao exportar '{source}' para '{dest}'."
     },
     "rename_file": {
       "title": "Renomear arquivo",

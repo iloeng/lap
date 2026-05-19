@@ -378,6 +378,7 @@
       "rename": "Renombrar",
       "move_to": "Mover a...",
       "copy_to": "Copiar a...",
+      "export_to": "Exportar a...",
       "move_to_trash": "Mover a papelera",
       "delete": "Eliminar",
       "reveal_in_finder": "Mostrar en Finder...",
@@ -518,6 +519,11 @@
       "ok": "Copiar",
       "success": "Se copió '{source}' a '{dest}'.",
       "error": "No se pudo copiar '{source}' a '{dest}'."
+    },
+    "export_to": {
+      "title": "Exportar a carpeta",
+      "success": "Se exportó '{source}' a '{dest}'.",
+      "error": "Error al exportar '{source}' a '{dest}'."
     },
     "rename_file": {
       "title": "Renombrar archivo",

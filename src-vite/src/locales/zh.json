@@ -378,6 +378,7 @@
       "rename": "重命名",
       "move_to": "移动到...",
       "copy_to": "复制到...",
+      "export_to": "导出到...",
       "move_to_trash": "移到废纸篓",
       "delete": "删除",
       "reveal_in_finder": "在访达中显示...",
@@ -518,6 +519,11 @@
       "ok": "复制",
       "success": "已将 '{source}' 复制到 '{dest}'。",
       "error": "将 '{source}' 复制到 '{dest}' 失败。"
+    },
+    "export_to": {
+      "title": "导出到文件夹",
+      "success": "已将 '{source}' 导出到 '{dest}'。",
+      "error": "将 '{source}' 导出到 '{dest}' 失败。"
     },
     "rename_file": {
       "title": "重命名文件",

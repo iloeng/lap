@@ -14,6 +14,7 @@ import {
   IconRename,
   IconMoveTo,
   IconCopyTo,
+  IconDownload,
   IconTrash,
   IconComment,
   IconPhotoSearch,
@@ -178,7 +179,13 @@ export const useFileMenuItems = (
       },
       {
         label: localeMsg.value.menu.file.copy_to,
+        icon: markRaw(IconCopyTo),
         action: createAction('copy-to')
+      },
+      {
+        label: localeMsg.value.menu.file.export_to,
+        icon: markRaw(IconDownload),
+        action: createAction('export-to')
       },
       {
         label: localeMsg.value.menu.file.copy,

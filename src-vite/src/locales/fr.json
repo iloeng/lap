@@ -378,6 +378,7 @@
       "rename": "Renommer",
       "move_to": "Déplacer vers...",
       "copy_to": "Copier vers...",
+      "export_to": "Exporter vers...",
       "move_to_trash": "Mettre à la corbeille",
       "delete": "Supprimer",
       "reveal_in_finder": "Afficher dans le Finder...",
@@ -518,6 +519,11 @@
       "ok": "Copier",
       "success": "'{source}' a été copié vers '{dest}'.",
       "error": "Impossible de copier '{source}' vers '{dest}'."
+    },
+    "export_to": {
+      "title": "Exporter vers le dossier",
+      "success": "'{source}' exporté vers '{dest}'.",
+      "error": "Échec de l'exportation de '{source}' vers '{dest}'."
     },
     "rename_file": {
       "title": "Renommer fichier",

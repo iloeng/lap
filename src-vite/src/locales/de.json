@@ -378,6 +378,7 @@
       "rename": "Umbenennen",
       "move_to": "Verschieben nach...",
       "copy_to": "Kopieren nach...",
+      "export_to": "Exportieren nach...",
       "move_to_trash": "In Papierkorb",
       "delete": "Löschen",
       "reveal_in_finder": "Im Finder anzeigen...",
@@ -518,6 +519,11 @@
       "ok": "Kopieren",
       "success": "'{source}' wurde nach '{dest}' kopiert.",
       "error": "'{source}' konnte nicht nach '{dest}' kopiert werden."
+    },
+    "export_to": {
+      "title": "In Ordner exportieren",
+      "success": "'{source}' nach '{dest}' exportiert.",
+      "error": "Fehler beim Exportieren von '{source}' nach '{dest}'."
     },
     "rename_file": {
       "title": "Datei umbenennen",

@@ -378,6 +378,7 @@
       "rename": "名前を変更",
       "move_to": "移動...",
       "copy_to": "コピー...",
+      "export_to": "エクスポート...",
       "move_to_trash": "ゴミ箱に入れる",
       "delete": "削除",
       "reveal_in_finder": "Finderで表示...",
@@ -518,6 +519,11 @@
       "ok": "コピー",
       "success": "'{source}' を '{dest}' にコピーしました。",
       "error": "'{source}' を '{dest}' にコピーできませんでした。"
+    },
+    "export_to": {
+      "title": "フォルダにエクスポート",
+      "success": "'{source}' を '{dest}' にエクスポートしました。",
+      "error": "'{source}' の '{dest}' へのエクスポートに失敗しました。"
     },
     "rename_file": {
       "title": "ファイル名を変更",

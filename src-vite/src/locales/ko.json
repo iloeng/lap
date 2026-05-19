@@ -378,6 +378,7 @@
       "rename": "이름 변경",
       "move_to": "이동...",
       "copy_to": "복사...",
+      "export_to": "내보내기...",
       "move_to_trash": "휴지통으로 이동",
       "delete": "삭제",
       "reveal_in_finder": "Finder에서 보기...",
@@ -518,6 +519,11 @@
       "ok": "복사",
       "success": "'{source}'을(를) '{dest}'(으)로 복사했습니다.",
       "error": "'{source}'을(를) '{dest}'(으)로 복사하지 못했습니다."
+    },
+    "export_to": {
+      "title": "폴더로 내보내기",
+      "success": "'{source}'을(를) '{dest}'(으)로 내보냈습니다.",
+      "error": "'{source}'을(를) '{dest}'(으)로 내보내지 못했습니다."
     },
     "rename_file": {
       "title": "파일 이름 변경",

@@ -19,7 +19,7 @@
     <div class="mb-2 px-2 flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
       <div class="border-t border-base-content/10 px-1 py-3 space-y-3">
         <div class="flex items-center gap-2 text-base-content/70">
-          <span class="font-bold uppercase text-xs tracking-wide">
+          <span class="text-[10px] uppercase tracking-widest font-bold text-base-content/30">
             {{ $t('info_panel.select_title') }}
           </span>
         </div>
@@ -99,9 +99,9 @@
       </div>
 
       <div class="border-t border-base-content/10 px-1 py-4 space-y-3">
-        <div class="text-base-content/70">
+        <!-- <div class="text-base-content/70">
           <span class="font-bold uppercase text-xs tracking-wide">{{ $t('info_panel.action') }}</span>
-        </div>
+        </div> -->
         <div class="space-y-2">
           <div class="text-[10px] uppercase tracking-widest font-bold text-base-content/30">
             {{ $t('info_panel.file_actions') }}
@@ -124,6 +124,15 @@
             >
               <IconCopyTo class="w-3.5 h-3.5" />
               {{ $t('menu.file.copy_to') }}
+            </button>
+            <button
+              class="btn btn-xs btn-ghost"
+              :class="selectedCount === 0 ? 'text-base-content/30' : 'text-base-content/70 hover:text-base-content'"
+              :disabled="selectedCount === 0"
+              @click="$emit('exportTo')"
+            >
+              <IconDownload class="w-3.5 h-3.5" />
+              {{ $t('menu.file.export_to') }}
             </button>
             <button
               class="btn btn-xs btn-ghost"
@@ -217,6 +226,7 @@ import {
   IconClose,
   IconComment,
   IconCopyTo,
+  IconDownload,
   IconHeart,
   IconHeartFilled,
   IconMoveTo,
@@ -262,6 +272,7 @@ defineEmits([
   'selectInvert',
   'moveTo',
   'copyTo',
+  'exportTo',
   'trash',
   'favoriteAll',
   'unfavoriteAll',
