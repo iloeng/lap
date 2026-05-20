@@ -69,7 +69,7 @@
               </figure>
 
               <img
-                v-show="!(showDiffPreview && canShowDiffPreview)"
+                v-show="imageReady && !(showDiffPreview && canShowDiffPreview)"
                 ref="imageRef"
                 :src="imageSrc"
                 :style="imageStyle"
@@ -574,10 +574,12 @@ function sendToParent(payload: Record<string, any>) {
 
 async function loadFileInfo(fileId: number) {
   try {
+    imageReady.value = false;
     const file = await getFileInfo(fileId);
     if (file) {
       file.thumbnail = getThumbUrl(file.id);
       fileInfo.value = file;
+      newFileName.value = file.name?.substring(0, file.name.lastIndexOf('.')) || file.name || '';
       const src = getPreviewUrl(file);
       initialImageSrc.value = typeof src === 'string' ? src : '';
     }
@@ -587,6 +589,7 @@ async function loadFileInfo(fileId: number) {
 }
 
 const isProcessing = ref(false);
+const imageReady = ref(false);
 const activeEditorTab = ref<'edit' | 'adjust'>('edit');
 
 const containerRef = ref<HTMLElement | null>(null);
@@ -995,7 +998,7 @@ const cropShapeOptions = computed(() => {
   ];
 });
 
-const newFileName = ref((fileInfo.value?.name?.substring(0, fileInfo.value.name.lastIndexOf('.'))) || fileInfo.value?.name || '');
+const newFileName = ref('');
 
 const fileSaveAsOptions = computed(() => {
   const options = getSelectOptions(localeMsg.value.msgbox.image_editor.save_as_options);
@@ -1283,6 +1286,7 @@ const onImageLoad = async () => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       enableTransition.value = true;
+      imageReady.value = true;
       isProcessing.value = false;
     });
   });
