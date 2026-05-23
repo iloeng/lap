@@ -912,8 +912,12 @@
       "calendar_sort": "Calendrier",
       "calendar_sort_hint": "Basé sur la date de prise ou la date de modification",
       "calendar_sort_options": [
-        "Les plus anciens d'abord",
-        "Les plus récents d'abord"
+        "Date de prise (Croissant)",
+        "Date de prise (Décroissant)",
+        "Date de création (Croissant)",
+        "Date de création (Décroissant)",
+        "Date de modification (Croissant)",
+        "Date de modification (Décroissant)"
       ],
       "category_sort": "Catégories",
       "category_sort_hint": "Tags, lieux, personnes et appareils photo",

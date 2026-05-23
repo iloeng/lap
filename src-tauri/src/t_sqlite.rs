@@ -723,6 +723,7 @@ pub struct QueryParams {
     pub search_folder: String,
     pub start_date: i64,
     pub end_date: i64,
+    pub calendar_sort: i64,     // 0=taken asc … 5=modified desc (sort / 2 → column)
     pub make: String,
     pub model: String,
     pub lens_make: String,
@@ -1860,14 +1861,30 @@ impl AFile {
     pub fn get_taken_dates(sort: i64) -> Result<Vec<(String, i64)>, String> {
         let conn = open_conn()?;
 
-        let order_clause = if sort == 0 { "ASC" } else { "DESC" };
+        // sort encodes both the date column and direction:
+        //   sort / 2  →  0=taken_date, 1=created_at, 2=modified_at
+        //   sort % 2  →  0=ASC, 1=DESC
+        let sort_type = sort / 2;
+        let order_clause = if sort % 2 == 0 { "ASC" } else { "DESC" };
+
+        let date_col = match sort_type {
+            0 => "a.taken_date",
+            1 => "a.created_at",
+            2 => "a.modified_at",
+            _ => "a.taken_date",
+        };
+
+        let date_expr = format!(
+            "strftime('%Y-%m-%d', {}, 'unixepoch', 'localtime')",
+            date_col
+        );
         let query = format!(
-            "SELECT strftime('%Y-%m-%d', a.taken_date, 'unixepoch', 'localtime') AS taken_date, COUNT(1) 
+            "SELECT {} AS group_date, COUNT(1)
             FROM afiles a
-            WHERE a.taken_date IS NOT NULL AND a.taken_date >= 86400
-            GROUP BY strftime('%Y-%m-%d', a.taken_date, 'unixepoch', 'localtime')
-            ORDER BY taken_date {}",
-            order_clause
+            WHERE {} IS NOT NULL AND {} >= 86400
+            GROUP BY {}
+            ORDER BY group_date {}",
+            date_expr, date_col, date_col, date_expr, order_clause
         );
 
         let mut stmt = conn
@@ -1927,7 +1944,13 @@ impl AFile {
         }
 
         if params.start_date > 0 && params.end_date > 0 {
-            conditions.push("a.taken_date >= ? AND a.taken_date < ?".to_string());
+            let date_col = match params.calendar_sort / 2 {
+                0 => "a.taken_date",
+                1 => "a.created_at",
+                2 => "a.modified_at",
+                _ => "a.taken_date",
+            };
+            conditions.push(format!("{} >= ? AND {} < ?", date_col, date_col));
             sql_params.push(Box::new(params.start_date));
             sql_params.push(Box::new(params.end_date));
         } else if params.start_date == -1 && params.end_date == -1 {

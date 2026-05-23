@@ -912,8 +912,12 @@
       "calendar_sort": "日历",
       "calendar_sort_hint": "基于拍摄日期或修改日期",
       "calendar_sort_options": [
-        "最早优先",
-        "最新优先"
+        "拍摄日期（升序）",
+        "拍摄日期（降序）",
+        "创建日期（升序）",
+        "创建日期（降序）",
+        "修改日期（升序）",
+        "修改日期（降序）"
       ],
       "category_sort": "分类",
       "category_sort_hint": "标签、地点、人物和相机",

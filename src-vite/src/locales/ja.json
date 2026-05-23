@@ -912,8 +912,12 @@
       "calendar_sort": "カレンダー",
       "calendar_sort_hint": "撮影日または更新日に基づく",
       "calendar_sort_options": [
-        "古い順",
-        "新しい順"
+        "撮影日（昇順）",
+        "撮影日（降順）",
+        "作成日（昇順）",
+        "作成日（降順）",
+        "更新日（昇順）",
+        "更新日（降順）"
       ],
       "category_sort": "カテゴリ",
       "category_sort_hint": "タグ、場所、人物、カメラ",

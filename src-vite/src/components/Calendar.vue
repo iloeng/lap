@@ -50,7 +50,7 @@
         :key="item.year"
         :class="[
           'flex min-w-48',
-          config.settings.calendarSort === 0 ? 'flex-col' : 'flex-col-reverse'
+          config.settings.calendarSort % 2 === 0 ? 'flex-col' : 'flex-col-reverse'
         ]"
       >
         <CalendarMonthly v-if="config.calendar.isMonthly"
@@ -108,7 +108,7 @@ const sorted_calendar_items = computed(() => {
   const years = Object.keys(dates).map(Number);
   
   // Sort years based on config
-  if (config.settings.calendarSort === 0) {
+  if (config.settings.calendarSort % 2 === 0) {
     years.sort((a, b) => a - b);
   } else {
     years.sort((a, b) => b - a);
@@ -168,7 +168,7 @@ function switchToDailyView() {
     if (year !== null && year !== undefined && calendar_dates.value[year]) {
       const months = Object.keys(calendar_dates.value[year]).map(Number);
       if (months.length > 0) {
-        if (config.settings.calendarSort === 0) {
+        if (config.settings.calendarSort % 2 === 0) {
           libConfig.calendar.month = Math.min(...months);
         } else {
           libConfig.calendar.month = Math.max(...months);

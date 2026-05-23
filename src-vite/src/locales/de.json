@@ -912,8 +912,12 @@
       "calendar_sort": "Kalender",
       "calendar_sort_hint": "Basierend auf dem Aufnahmedatum oder dem Änderungsdatum",
       "calendar_sort_options": [
-        "Älteste zuerst",
-        "Neueste zuerst"
+        "Aufnahmedatum (Aufsteigend)",
+        "Aufnahmedatum (Absteigend)",
+        "Erstelldatum (Aufsteigend)",
+        "Erstelldatum (Absteigend)",
+        "Änderungsdatum (Aufsteigend)",
+        "Änderungsdatum (Absteigend)"
       ],
       "category_sort": "Kategorien",
       "category_sort_hint": "Tags, Orte, Personen und Kameras",
