@@ -2612,6 +2612,8 @@ onMounted( async() => {
         updateContent(true);
       }, 200);
     }
+
+    refreshLibraryTotalCount();
   });
 
   unlistenThumbnailReady = await listen('thumbnail_ready', async (event: any) => {

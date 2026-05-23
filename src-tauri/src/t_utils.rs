@@ -2571,6 +2571,17 @@ pub async fn index_album_worker(
     // (some files may have been skipped or failed to insert).
     let _ = Album::recount_album(album_id);
 
+    // After a clean completed scan, align indexed with total so the next
+    // scan does not incorrectly resume from a progress-milestone value
+    // (update_progress writes indexed every 50 files during the scan,
+    // and recount_album clamps without distinguishing complete vs partial).
+    if !is_cancelled {
+        if let Ok(album) = Album::get_album_by_id(album_id) {
+            let total = album.total.unwrap_or(0) as u64;
+            let _ = Album::update_progress(album_id, total, total);
+        }
+    }
+
     // 5. Set album cover if needed (must happen before index_finished event)
     // so frontend refresh gets the latest cover_file_id immediately.
     let _ = Album::auto_set_cover(album_id);
