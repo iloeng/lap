@@ -937,7 +937,8 @@
       "style_options": [
         "Vista de tarjeta",
         "Vista mosaico",
-        "Vista justificada"
+        "Vista justificada",
+        "Vista Masonry"
       ],
       "size": "Tamaño miniatura",
       "scaling": "Escalado",
@@ -958,11 +959,6 @@
         "Cámara",
         "Lente",
         "Ajustes captura"
-      ],
-      "justify_mode": "Modo justificado",
-      "justify_mode_options": [
-        "Altura igual",
-        "Ancho igual (Masonry)"
       ],
       "date_grouping": "Mostrar grupos por fecha",
       "date_grouping_hint": "Solo se aplica al ordenar por tiempo",

@@ -138,6 +138,10 @@ const columnCount = ref(4);
 const containerWidth = ref(0);
 const headerHeight = 32;
 
+function isGeometryGridStyle(style: number) {
+  return style === 2 || style === 3;
+}
+
 const isTimeSort = computed(() => [0, 1, 2].includes(Number(props.sortType)));
 const dateGroupingEnabled = computed(() =>
   !config.settings.grid.showFilmStrip &&
@@ -245,7 +249,7 @@ const groupedLayoutGeometryResult = computed(() => {
 
   if (showFilmStrip) return { boxes: [], contentSize: 0 };
 
-  if (style !== 2) {
+  if (!isGeometryGridStyle(style)) {
     let y = 0;
     let col = 0;
 
@@ -283,7 +287,7 @@ const groupedLayoutGeometryResult = computed(() => {
 
   const flushGroup = () => {
     if (groupFiles.length === 0) return;
-    const result = config.settings.grid.justifyMode === 1
+    const result = config.settings.grid.style === 3
       ? calculateMasonryLayout(groupFiles, containerWidth.value, size, 0)
       : calculateJustifiedLayout(groupFiles, containerWidth.value, size, 0);
     result.boxes.forEach((box, index) => {
@@ -325,42 +329,40 @@ const layoutGeometryResult = computed(() => {
   }
 
   if (showFilmStrip) {
-    if (style === 2) {
+    if (isGeometryGridStyle(style)) {
       const isVertical = config.settings.grid.previewPosition >= 2;
-      if (isVertical && containerWidth.value > 0) {
-        // Justified Layout in Filmstrip (Vertical)
+      if (isVertical) {
+        if (containerWidth.value <= 0) return { boxes: [], contentSize: 0 };
         const result = calculateLinearColumnLayout(props.fileList, containerWidth.value, 0);
         return { boxes: result.boxes, contentSize: result.containerHeight };
-      } else {
-        // Justified Layout in Filmstrip (Horizontal)
-        const result = calculateLinearRowLayout(props.fileList, size, 0);
-        return { boxes: result.boxes, contentSize: result.containerWidth };
       }
+      const result = calculateLinearRowLayout(props.fileList, size, 0);
+      return { boxes: result.boxes, contentSize: result.containerWidth };
     }
-    return { boxes: [], contentSize: 0 };
-  } else if (style === 2 && containerWidth.value > 0) {
-    if (config.settings.grid.justifyMode === 1) {
+  } else {
+    if (style === 2 && containerWidth.value > 0) {
+      const result = calculateJustifiedLayout(props.fileList, containerWidth.value, size, 0);
+      return { boxes: result.boxes, contentSize: result.containerHeight };
+    }
+    else if (style === 3 && containerWidth.value > 0) {
       const result = calculateMasonryLayout(props.fileList, containerWidth.value, size, 0);
       return { boxes: result.boxes, contentSize: result.containerHeight };
     }
-    const result = calculateJustifiedLayout(
-      props.fileList,
-      containerWidth.value,
-      size,
-      0
-    );
-    return { boxes: result.boxes, contentSize: result.containerHeight };
   }
   return { boxes: [], contentSize: 0 };
 });
 
 const layoutGeometry = computed(() => layoutGeometryResult.value.boxes);
 const layoutContentHeight = computed(() => layoutGeometryResult.value.contentSize);
+const usesGeometryLayout = computed(() =>
+  dateGroupingEnabled.value ||
+  isGeometryGridStyle(config.settings.grid.style)
+);
 const virtualScrollGeometry = computed(() =>
-  dateGroupingEnabled.value || config.settings.grid.style === 2 ? layoutGeometry.value : undefined
+  usesGeometryLayout.value ? layoutGeometry.value : undefined
 );
 const virtualScrollContentHeight = computed(() =>
-  dateGroupingEnabled.value || config.settings.grid.style === 2 ? layoutContentHeight.value : undefined
+  usesGeometryLayout.value ? layoutContentHeight.value : undefined
 );
 
 const isLayoutTransitioning = ref(false);
@@ -420,7 +422,7 @@ function updateLayout() {
   emit('layout-update', { height: layoutContentHeight.value });
 }
 
-watch(() => [config.settings.grid.size, config.settings.grid.style, config.settings.grid.showFilmStrip, config.settings.grid.justifyMode, config.settings.grid.dateGrouping, props.sortType], () => {
+watch(() => [config.settings.grid.size, config.settings.grid.style, config.settings.grid.showFilmStrip, config.settings.grid.dateGrouping, props.sortType], () => {
   isLayoutTransitioning.value = true;
   updateColumnCount();
   
@@ -602,7 +604,7 @@ function scrollToItem(index: number) {
     let itemPos = 0;
     let itemSizeValue = 0;
 
-    if (config.settings.grid.style === 2 && layoutGeometry.value[displayIndex]) {
+    if (layoutGeometry.value[displayIndex]) {
       const box = layoutGeometry.value[displayIndex];
       itemPos = isHorizontal ? box.x : box.y;
       itemSizeValue = isHorizontal ? box.width : box.height;
@@ -645,7 +647,9 @@ function getScrollTop() {
 }
 
 function getNextItemIndex(currentIndex: number, direction: 'up' | 'down'): number {
-  if (config.settings.grid.style !== 2 || layoutGeometry.value.length === 0) {
+  const style = config.settings.grid.style;
+  const supportsGeometryNavigation = style === 2 || (!config.settings.grid.showFilmStrip && isGeometryGridStyle(style));
+  if (!supportsGeometryNavigation || layoutGeometry.value.length === 0) {
     return -1;
   }
 

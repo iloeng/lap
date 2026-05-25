@@ -113,11 +113,10 @@
 
           <!-- grid styles cycle -->
           <TButton
-            :icon="[IconCard, IconTile, IconJustified][config.settings.grid.style]"
-            :iconStyle="{ 
-              transform: `rotate(${config.settings.grid.style === 2 && config.settings.grid.justifyMode === 1 ? 90 : 0}deg)`, 
-              transition: 'transform 0.3s ease-in-out' 
-            }" 
+            :icon="[IconCard, IconTile, IconJustified, IconJustified][config.settings.grid.style]"
+            :iconStyle="{
+              transform: `rotate(${config.settings.grid.style === 3 ? 90 : 0}deg)`,
+            }"
             :tooltip="localeMsg.settings.view.style_options[config.settings.grid.style]"
             @click="cycleGridStyle"
           />
@@ -1065,10 +1064,14 @@ const containerWidth = ref(0);    // container width
 const layoutContentHeight = ref(0); // reported content height from GridView
 const layoutVersion = ref(0);     // version to force layout update
 let layoutRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+const isGeometryGridStyle = computed(() => config.settings.grid.style === 2 || config.settings.grid.style === 3);
+const usesGeometryNavigation = computed(() =>
+  config.settings.grid.style === 2 ||
+  (!config.settings.grid.showFilmStrip && config.settings.grid.style === 3)
+);
 
 function scheduleLayoutRefresh() {
-  // Only justified layout depends heavily on per-item geometry changes.
-  if (config.settings.grid.style !== 2) return;
+  if (!isGeometryGridStyle.value) return;
   if (layoutRefreshTimer) return;
   layoutRefreshTimer = setTimeout(() => {
     layoutVersion.value++;
@@ -1082,8 +1085,8 @@ const itemWidth = computed(() => {
     return config.settings.grid.size + 20; // size + padding/border/gap(20)
   } else if (config.settings.grid.style === 1) {
     return config.settings.grid.size;
-  } else if (config.settings.grid.style === 2) {
-    return config.settings.grid.size; // Approximation for Justified View
+  } else if (isGeometryGridStyle.value) {
+    return config.settings.grid.size; // Approximation for geometry layouts
   }
   return 0;
 });
@@ -1096,7 +1099,7 @@ const itemSize = computed(() => {
     return config.settings.grid.size + 20 + labelHeight; // size + padding/border/gap(20) + labels
   } else if (config.settings.grid.style === 1) {
     return itemWidth.value + gap / 2;
-  } else if (config.settings.grid.style === 2) {
+  } else if (isGeometryGridStyle.value) {
     return config.settings.grid.size;
   }
   return 0;
@@ -1697,8 +1700,8 @@ const keyActions = {
     if (getActivePreviewMode() !== 'none') return;
     checkUnsavedChanges(() => {
       if (gridViewRef.value) {
-        if (config.settings.grid.style === 2) {
-          // Use geometry-aware navigation for Justified View
+        if (usesGeometryNavigation.value) {
+          // Use geometry-aware navigation for variable-sized layouts.
           const nextIndex = gridViewRef.value.getNextItemIndex(selectedItemIndex.value, 'down');
           selectedItemIndex.value = nextIndex !== -1 ? nextIndex : selectedItemIndex.value;
         } else {
@@ -1711,8 +1714,8 @@ const keyActions = {
     if (getActivePreviewMode() !== 'none') return;
     checkUnsavedChanges(() => {
       if (gridViewRef.value) {
-        if (config.settings.grid.style === 2) {
-          // Use geometry-aware navigation for Justified View
+        if (usesGeometryNavigation.value) {
+          // Use geometry-aware navigation for variable-sized layouts.
           const nextIndex = gridViewRef.value.getNextItemIndex(selectedItemIndex.value, 'up');
           selectedItemIndex.value = nextIndex !== -1 ? nextIndex : selectedItemIndex.value;
         } else {
@@ -2929,8 +2932,8 @@ function toggleFilmstripView() {
 
 function cycleGridStyle() {
   showQuickView.value = false;
-  // Cycle between 0, 1, 2 (Card, Tile, Justified)
-  config.settings.grid.style = (config.settings.grid.style + 1) % 3;
+  // Cycle between card, tile, justified, and masonry.
+  config.settings.grid.style = (config.settings.grid.style + 1) % 4;
 }
 
 // Track pending requests to avoid duplicates

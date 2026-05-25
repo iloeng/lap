@@ -937,7 +937,8 @@
       "style_options": [
         "Kartenansicht",
         "Kachelansicht",
-        "Blocksatzansicht"
+        "Blocksatzansicht",
+        "Masonry-Ansicht"
       ],
       "size": "Größe",
       "scaling": "Skalierung",
@@ -958,11 +959,6 @@
         "Kamera",
         "Objektiv",
         "Einstellungen"
-      ],
-      "justify_mode": "Blocksatzmodus",
-      "justify_mode_options": [
-        "Gleiche Höhe",
-        "Gleiche Breite (Masonry)"
       ],
       "date_grouping": "Datumsgruppen anzeigen",
       "date_grouping_hint": "Gilt nur bei Sortierung nach Zeit",

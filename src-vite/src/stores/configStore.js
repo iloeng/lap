@@ -108,12 +108,11 @@ export const useConfigStore = defineStore('configStore', {
       thumbnailSize: 512,         // thumbnail image size (small: 128, medium: 256, large: 512, extra large: 1024)
       grid: {
         size: 160,               // grid size, range 120-360
-        style: 0,                // 0: card view, 1: tile view, 2: justified view
+        style: 0,                // 0: card view, 1: tile view, 2: justified view, 3: masonry view
         showFilmStrip: false,    // show filmstrip view
         scaling: 1,              // 0: Fit Entire Image, 1: Crop to Fill, 2: Stretch to Fill
         labelPrimary: 1,         // card view: primary label (1: Name)
         labelSecondary: 3,       // card view: secondary label (3: Dimension)
-        justifyMode: 0,          // justified view mode: 0: equal height, 1: equal width (masonry)
         previewPosition: 0,      // filmstrip view: preview position (0: top, 1: bottom, 2: left, 3: right)
         dateGrouping: 0,         // show date groups: 0: none, 1: day, 2: month
       },
@@ -237,9 +236,6 @@ export const useConfigStore = defineStore('configStore', {
     },
     setGridLabelSecondary(gridLabelSecondary) {
       this.settings.grid.labelSecondary = gridLabelSecondary;
-    },
-    setJustifyMode(justifyMode) {
-      this.settings.grid.justifyMode = justifyMode;
     },
     setGridDateGrouping(dateGrouping) {
       this.settings.grid.dateGrouping = dateGrouping;

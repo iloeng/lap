@@ -937,7 +937,8 @@
       "style_options": [
         "Card view",
         "Tile view",
-        "Justified view"
+        "Justified view",
+        "Masonry view"
       ],
       "size": "Thumbnail size",
       "scaling": "Thumbnail scaling",
@@ -958,11 +959,6 @@
         "Camera",
         "Lens",
         "Capture settings"
-      ],
-      "justify_mode": "Justify mode",
-      "justify_mode_options": [
-        "Equal height",
-        "Equal width (Masonry)"
       ],
       "date_grouping": "Show date groups",
       "date_grouping_hint": "Only applies when sorting by time",

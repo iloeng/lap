@@ -128,9 +128,6 @@ listen('settings-gridLabelPrimary-changed', (event) => {
 listen('settings-gridLabelSecondary-changed', (event) => {
   config.setGridLabelSecondary(event.payload)
 })
-listen('settings-justifyMode-changed', (event) => {
-  config.setJustifyMode(event.payload)
-})
 listen('settings-gridDateGrouping-changed', (event) => {
   config.setGridDateGrouping(event.payload)
 })

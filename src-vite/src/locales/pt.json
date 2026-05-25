@@ -937,7 +937,8 @@
       "style_options": [
         "Visualização em cartões",
         "Visualização em mosaico",
-        "Visualização justificada"
+        "Visualização justificada",
+        "Visualização Masonry"
       ],
       "size": "Tamanho",
       "scaling": "Escala",
@@ -958,11 +959,6 @@
         "Câmera",
         "Lente",
         "Configurações"
-      ],
-      "justify_mode": "Modo justificado",
-      "justify_mode_options": [
-        "Altura igual",
-        "Largura igual (Masonry)"
       ],
       "date_grouping": "Mostrar grupos por data",
       "date_grouping_hint": "Aplica-se apenas ao ordenar por tempo",

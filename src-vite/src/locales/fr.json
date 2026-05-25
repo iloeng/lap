@@ -937,7 +937,8 @@
       "style_options": [
         "Vue carte",
         "Vue mosaïque",
-        "Vue justifiée"
+        "Vue justifiée",
+        "Vue Masonry"
       ],
       "size": "Taille",
       "scaling": "Mise à l'échelle",
@@ -958,11 +959,6 @@
         "Appareil",
         "Objectif",
         "Paramètres"
-      ],
-      "justify_mode": "Mode justifié",
-      "justify_mode_options": [
-        "Hauteur égale",
-        "Largeur égale (Masonry)"
       ],
       "date_grouping": "Afficher les groupes par date",
       "date_grouping_hint": "S'applique uniquement au tri par date",
