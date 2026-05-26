@@ -914,12 +914,12 @@
       "calendar_sort": "Calendar",
       "calendar_sort_hint": "Based on taken date or modified date",
       "calendar_sort_options": [
-        "Taken date (Ascending)",
-        "Taken date (Descending)",
-        "Created date (Ascending)",
-        "Created date (Descending)",
-        "Modified date (Ascending)",
-        "Modified date (Descending)"
+        "Taken date (Asc)",
+        "Taken date (Desc)",
+        "Created date (Asc)",
+        "Created date (Desc)",
+        "Modified date (Asc)",
+        "Modified date (Desc)"
       ],
       "category_sort": "Categories",
       "category_sort_hint": "Tags, locations, people, and cameras",
