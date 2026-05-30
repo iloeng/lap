@@ -9,13 +9,6 @@
       </div>
       <div class="mt-2 flex items-center gap-1">
         <TButton
-          :icon="IconRefresh"
-          :tooltip="$t('menu.file.refresh_file_info')"
-          :buttonSize="'small'"
-          :disabled="!fileInfo"
-          @click.stop="emit('refreshFileInfo')"
-        />
-        <TButton
           :icon="IconClose"
           :tooltip="$t('msgbox.close')"
           :buttonSize="'small'"
@@ -243,7 +236,7 @@
 
             <!-- Dimension -->
             <div class="flex items-center text-[10px] uppercase tracking-widest font-bold text-base-content/25 h-6">{{ $t('file_info.dimension') }}</div>
-            <div class="flex items-center text-xs font-semibold text-base-content/65">{{ formatDimensionText(fileInfo?.width, fileInfo?.height) }}</div>
+            <div class="flex items-center text-xs font-semibold text-base-content/65">{{ formatDimensionText(fileInfo?.width, fileInfo?.height, true) }}</div>
 
             <!-- Duration -->
             <template v-if="fileInfo?.file_type === 2">
@@ -478,7 +471,6 @@ import {
   IconFile, IconFolderSearch, IconHeart, IconHeartFilled, IconStar, IconStarFilled, IconEdit,
   IconFolderExpanded,
   IconPhoto,
-  IconRefresh,
   IconRotate,
   IconVideo,
   IconVideoPlay,
@@ -510,7 +502,6 @@ const emit = defineEmits([
   'quickEditTag',
   'quickEditComment',
   'navigateFolder',
-  'refreshFileInfo',
 ]);
 
 const toast = useToast();

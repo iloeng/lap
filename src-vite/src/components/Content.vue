@@ -438,7 +438,6 @@
             @quick-edit-tag="clickTag"
             @quick-edit-comment="openCommentEditor"
             @navigate-folder="handleInfoNavigateFolder"
-            @refresh-file-info="updateFile(fileList[selectedItemIndex], true)"
           />
         </div>
       </transition>

@@ -267,7 +267,7 @@
               <div class="flex flex-col gap-0.5 text-sm leading-5">
                 <div>{{ $t('settings.image_view.loop_video') }}</div>
               </div>
-              <input type="checkbox" class="toggle toggle-primary toggle-sm" v-model="config.settings.loopVideo" :disabled="!config.settings.autoPlayVideo" />
+              <input type="checkbox" class="toggle toggle-primary toggle-sm" v-model="config.settings.loopVideo" />
             </div>
           </div>
 
